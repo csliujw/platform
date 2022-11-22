@@ -1,0 +1,1 @@
+- 安装 vue-router vuex jquery bootstrap
