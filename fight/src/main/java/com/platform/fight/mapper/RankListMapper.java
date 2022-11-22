@@ -5,5 +5,5 @@ import com.platform.fight.pojo.User;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper
-public interface RanklistMapper extends BaseMapper<User> {
+public interface RankListMapper extends BaseMapper<User> {
 }

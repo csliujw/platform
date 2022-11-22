@@ -15,5 +15,4 @@ public class JWTAuthentication {
         }
         return userId;
     }
-
 }

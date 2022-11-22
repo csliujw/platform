@@ -137,7 +137,6 @@ public class Game {
             e.printStackTrace();
         }
 
-        // 机器与机器对战，问题就比较大。
         sendBotCode(playerBlue);
         sendBotCode(playerRed);
 
@@ -262,7 +261,6 @@ public class Game {
             updateRecord();
         }
     }
-
 
     /**
      * 地图工具类，用于生成地图，判断地图情况等

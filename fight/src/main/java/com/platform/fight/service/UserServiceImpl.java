@@ -60,9 +60,6 @@ public class UserServiceImpl implements IUserService {
 
     @Override
     public Map<String, String> getInfo() {
-//        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
-//        UserDetailsImpl logUser = (UserDetailsImpl) token.getPrincipal();
-//        User user = logUser.getUser();
         User user = UserHolder.holder.get();
         HashMap<String, String> map = new HashMap<>();
         map.put("resp_message", "success");

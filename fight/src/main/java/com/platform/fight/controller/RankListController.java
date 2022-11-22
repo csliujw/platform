@@ -13,10 +13,10 @@ import org.springframework.web.bind.annotation.RestController;
 public class RankListController {
 
     @Autowired
-    private IRankListService ranklistService;
+    private IRankListService rankListService;
 
     @GetMapping("/list/{page}")
     public JSONObject getList(@PathVariable("page") Integer page) {
-        return ranklistService.selectAll(page);
+        return rankListService.selectAll(page);
     }
 }

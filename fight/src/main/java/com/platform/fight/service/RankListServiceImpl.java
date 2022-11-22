@@ -2,7 +2,7 @@ package com.platform.fight.service;
 
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.platform.fight.mapper.RanklistMapper;
+import com.platform.fight.mapper.RankListMapper;
 import com.platform.fight.pojo.User;
 import com.platform.fight.service.interfaces.IRankListService;
 import com.platform.fight.utils.RedisKeyUtils;
@@ -24,7 +24,7 @@ public class RankListServiceImpl implements IRankListService {
     private Semaphore rebuildCacheLock = new Semaphore(1);
 
     @Autowired
-    private RanklistMapper ranklistMapper;
+    private RankListMapper ranklistMapper;
 
     @Autowired
     private StringRedisTemplate redisTemplate;

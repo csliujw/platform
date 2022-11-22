@@ -23,8 +23,3 @@ public class ReceiveBotMoveServiceImpl implements IReceiveBotMoveService {
         return "receive bot move success";
     }
 }
-
-
-/***
- * bug 一直 sendResult。
- */

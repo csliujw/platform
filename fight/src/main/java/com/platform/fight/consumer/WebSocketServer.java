@@ -96,27 +96,6 @@ public class WebSocketServer {
         }
     }
 
-    private static Bot checkAndSetBot(Integer userId, Integer botId) {
-        if (botId >= 0) {
-            return botMapper.selectById(botId);
-        } else if (userId < -1 && botId < -1) {// 如果 blueId < 0 且 botId < -1 说明是机器人
-            // 判断是否是机器，如果是机器会返回生成的一个机器人。
-            return MachinePlayerUtils.judgeIsMachinePlayer(botId);
-        }
-        return null;
-    }
-
-    // 检查是否是机器人。
-    private static User checkAndSetUser(Integer userId) {
-        // 真实用户的id都是大于等于0的
-        String machinePhoto = "https://cdn.acwing.com/media/user/profile/photo/2675_lg_92591a4803.jpeg";
-        if (userId <= -1) {
-            // 説明是機器人
-            return new User(userId, "机器人", "", machinePhoto, 1000, 0);
-        }
-        return userMapper.selectById(userId);
-    }
-
     public static void startGame(Integer blueId, Integer blueBotId, Integer redId, Integer redBotId) {
         // 红蓝双方 id,如果是机器人，则会自动生成一个机器人。
         User blueUser = checkAndSetUser(blueId);
@@ -167,17 +146,6 @@ public class WebSocketServer {
         generateOpponentAndGameInfo(redUser, blueUser, respGame);
     }
 
-    private static void generateOpponentAndGameInfo(User me, User opponent, JSONObject respGame) {
-        JSONObject blueResp = new JSONObject();
-        blueResp.put("event", "start-matching");
-        blueResp.put("opponent_username", opponent.getUsername());
-        blueResp.put("opponent_photo", opponent.getPhoto());
-        blueResp.put("game", respGame);
-        // 用户在线，且用户不是机器人（id>=-1） 才需要发送消息
-        if (users.get(me.getId()) != null && me.getId() >= -1) {
-            users.get(me.getId()).sendMessage(blueResp.toJSONString());
-        }
-    }
 
     public void startMatching(Integer botId) {
         System.out.println("start matching, 当前的匹配类型是" + botId);
@@ -195,20 +163,6 @@ public class WebSocketServer {
         MultiValueMap<String, String> data = new LinkedMultiValueMap<>();
         data.add("userId", this.user.getId().toString());
         restTemplate.postForObject(MATCH_REMOVE_URL, data, String.class);
-    }
-
-    private void move(int direction) {
-        if (game.getPlayerBlue().getId().equals(user.getId())) {
-            // 人工操作,才需要接受前端的操作（人的輸入）
-            if (game.getPlayerBlue().getBotId().equals(-1)) {
-                game.setNextStepBlue(direction);
-            }
-        }
-        if (game.getPlayerRed().getId().equals(user.getId())) {
-            if (game.getPlayerRed().getBotId().equals(-1)) {
-                game.setNextStepRed(direction);
-            }
-        }
     }
 
     @OnMessage
@@ -241,5 +195,52 @@ public class WebSocketServer {
                 e.printStackTrace();
             }
         }
+    }
+
+    private static void generateOpponentAndGameInfo(User me, User opponent, JSONObject respGame) {
+        JSONObject blueResp = new JSONObject();
+        blueResp.put("event", "start-matching");
+        blueResp.put("opponent_username", opponent.getUsername());
+        blueResp.put("opponent_photo", opponent.getPhoto());
+        blueResp.put("game", respGame);
+        // 用户在线，且用户不是机器人（id>=-1） 才需要发送消息
+        if (users.get(me.getId()) != null && me.getId() >= -1) {
+            users.get(me.getId()).sendMessage(blueResp.toJSONString());
+        }
+    }
+
+    private void move(int direction) {
+        if (game.getPlayerBlue().getId().equals(user.getId())) {
+            // 人工操作,才需要接受前端的操作（人的輸入）
+            if (game.getPlayerBlue().getBotId().equals(-1)) {
+                game.setNextStepBlue(direction);
+            }
+        }
+        if (game.getPlayerRed().getId().equals(user.getId())) {
+            if (game.getPlayerRed().getBotId().equals(-1)) {
+                game.setNextStepRed(direction);
+            }
+        }
+    }
+
+    private static Bot checkAndSetBot(Integer userId, Integer botId) {
+        if (botId >= 0) {
+            return botMapper.selectById(botId);
+        } else if (userId < -1 && botId < -1) {// 如果 blueId < 0 且 botId < -1 说明是机器人
+            // 判断是否是机器，如果是机器会返回生成的一个机器人。
+            return MachinePlayerUtils.judgeIsMachinePlayer(botId);
+        }
+        return null;
+    }
+
+    // 检查是否是机器人。
+    private static User checkAndSetUser(Integer userId) {
+        // 真实用户的id都是大于等于0的
+        String machinePhoto = "https://cdn.acwing.com/media/user/profile/photo/2675_lg_92591a4803.jpeg";
+        if (userId <= -1) {
+            // 説明是機器人
+            return new User(userId, "机器人", "", machinePhoto, 1000, 0);
+        }
+        return userMapper.selectById(userId);
     }
 }

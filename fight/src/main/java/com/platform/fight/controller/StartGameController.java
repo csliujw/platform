@@ -22,5 +22,4 @@ public class StartGameController {
         WebSocketServer.startGame(blueId, blueBotId, redId, redBotId);
         return "start game success";
     }
-
 }

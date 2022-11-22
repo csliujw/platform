@@ -29,34 +29,37 @@ public class UserDetailServiceImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        System.out.println("spring security");// 用户登录时会触发这个方法吗？
         User user = getUser(username);
         return new UserDetailsImpl(user);
     }
 
+    // 一次完整的请求中，可能有多个服务需要使用到 User 信息，这里做一个调整，每次请求时从 Redis 查询用户信息，然后存入 ThreadLocal 中，
+    // 后面的应用需要再使用时就无需再次请求 Redis 了。
     public User getUser(String username) {
-
-        Map<Object, Object> entries = redisTemplate.opsForHash().entries(RedisKeyUtils.USER_KEY + username);
-        // 用戶在 redis 中
+        String keys = RedisKeyUtils.USER_KEY + username.trim();
         User user = null;
-        if (entries != null && entries.size() != 0) {
-            user = BeanUtil.mapToBean(entries, User.class, true);
-        } else {
-            QueryWrapper query = new QueryWrapper<User>();
-            query.eq("username", username);
-            user = userMapper.selectOne(query);
-            if (user == null) {
-                throw new RuntimeException("用户不存在");
-            } else {
-                // 不在则存入并设置过期时间
-                Map<String, Object> map = BeanUtil.beanToMap(user, new HashMap<>(),
-                        CopyOptions.create().
-                                setIgnoreNullValue(true).
-                                setFieldValueEditor((key, value) -> value.toString()));
-                redisTemplate.opsForHash().putAll(RedisKeyUtils.USER_KEY + username.trim(), map);
-                redisTemplate.expire(RedisKeyUtils.USER_KEY + username.trim(), 30 * 60, TimeUnit.SECONDS);
-            }
+
+        Map<Object, Object> userInfomation = redisTemplate.opsForHash().entries(keys);
+
+        // 用戶在 redis 中
+        if (userInfomation != null && userInfomation.size() != 0) {
+            user = BeanUtil.mapToBean(userInfomation, User.class, true);
+            redisTemplate.expire(keys, 30 * 60, TimeUnit.SECONDS);
+            return user;
         }
+
+        user = userMapper.selectOne(new QueryWrapper<User>().eq("username", username));
+        if (user == null) {
+            throw new RuntimeException("用户不存在");
+        }
+        // 不在则存入 Redis 并设置过期时间
+        Map<String, Object> map = BeanUtil.beanToMap(user, new HashMap<>(), CopyOptions
+                .create()
+                .setIgnoreNullValue(true)
+                .setFieldValueEditor((key, value) -> value.toString()));
+
+        redisTemplate.opsForHash().putAll(keys, map);
+        redisTemplate.expire(keys, 30 * 60, TimeUnit.SECONDS);
         return user;
     }
 }

@@ -35,10 +35,6 @@ public class BotServiceImpl implements IBotService {
 
     @Override
     public Map<String, String> add(Map<String, String> data) {
-//        UsernamePasswordAuthenticationToken authenticationToken = (UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
-//        UserDetailsImpl principal = (UserDetailsImpl) authenticationToken.getPrincipal();
-//        User user = principal.getUser();
-
         User user = UserHolder.holder.get();
 
         String title = data.get("title");
@@ -46,6 +42,7 @@ public class BotServiceImpl implements IBotService {
         String description = data.get("description");
         String content = data.get("content");
         Map<String, String> map = new HashMap<>();
+
         if (title == null || title.length() == 0) {
             map.put("resp_message", "标题不能为空");
             return map;

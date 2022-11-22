@@ -21,7 +21,6 @@ public class ReceiveBotMoveController {
     public String receiveBotMove(@RequestParam MultiValueMap<String, String> data) {
         int userId = Integer.parseInt(Objects.requireNonNull(data.getFirst("userId")));
         int direction = Integer.parseInt(Objects.requireNonNull(data.getFirst("direction")));
-//        System.out.println("接收到了Bot的移动信息嘛" + userId + " " + direction); // 人机对战可以接收到机器的信息
         return receiveBotMoveService.receiveBotMove(userId, direction);
     }
 }

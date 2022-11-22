@@ -35,7 +35,6 @@ public class JWTAuthenticationTokenFilter extends OncePerRequestFilter {
     @Autowired
     private UserDetailServiceImpl userDetailService;
 
-
     @Override
     // JWT 验证需要判断 token 中的用户是否可用。
     // SpringSeurity 验证也要判断用户是否可用。
