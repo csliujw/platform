@@ -113,7 +113,7 @@ public class MatchingPool {
     public void execute() {
         while (true) {
             try {
-                Thread.sleep(2000);
+                Thread.sleep(1000);
                 lock.lock();
                 try {
                     increaseWaitingTime();

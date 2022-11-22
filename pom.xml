@@ -12,6 +12,7 @@
     <modules>
         <module>match</module>
         <module>fight</module>
+        <module>bot</module>
     </modules>
 
     <groupId>com.platform</groupId>

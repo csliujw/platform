@@ -4,10 +4,11 @@ import com.platform.bot.dto.BotDTO;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
-public class BotPool extends Thread {
+public class BotPool {
 
-    private final BlockingQueue<BotDTO> botsQueue = new LinkedBlockingQueue<>();
+    private final BlockingQueue<BotDTO> botsQueue = new LinkedBlockingQueue<>(6000);
 
     // Controller 的线程会调用这个方法
     public void addBot(Integer userId, String botCode, String input) {
@@ -17,12 +18,11 @@ public class BotPool extends Thread {
     // 消费一个bot，设置最大运行时间为 2s
     private void consume(BotDTO bot) {
         Consumer consumer = new Consumer();
-        consumer.startTimeout(2000, bot);
+        consumer.startTimeout(2000, TimeUnit.SECONDS, bot);
     }
 
     // BotPool 也会执行这个方法。多线程争用 botsQueue
-    @Override
-    public void run() {
+    public void execute() {
         while (true) {
             try {
                 BotDTO bot = botsQueue.take();
