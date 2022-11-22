@@ -35,7 +35,7 @@ public class UserDetailServiceImpl implements UserDetailsService {
     }
 
     public User getUser(String username) {
-        System.out.println("查了几次数据？");
+
         Map<Object, Object> entries = redisTemplate.opsForHash().entries(RedisKeyUtils.USER_KEY + username);
         // 用戶在 redis 中
         User user = null;

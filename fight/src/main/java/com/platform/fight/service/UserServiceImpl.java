@@ -6,12 +6,12 @@ import com.platform.fight.pojo.User;
 import com.platform.fight.service.interfaces.IUserService;
 import com.platform.fight.service.utils.UserDetailsImpl;
 import com.platform.fight.utils.JWTUtil;
+import com.platform.fight.utils.UserHolder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -60,9 +60,10 @@ public class UserServiceImpl implements IUserService {
 
     @Override
     public Map<String, String> getInfo() {
-        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
-        UserDetailsImpl logUser = (UserDetailsImpl) token.getPrincipal();
-        User user = logUser.getUser();
+//        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
+//        UserDetailsImpl logUser = (UserDetailsImpl) token.getPrincipal();
+//        User user = logUser.getUser();
+        User user = UserHolder.holder.get();
         HashMap<String, String> map = new HashMap<>();
         map.put("resp_message", "success");
         map.put("id", user.getId().toString());

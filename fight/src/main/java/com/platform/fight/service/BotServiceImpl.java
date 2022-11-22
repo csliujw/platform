@@ -10,6 +10,7 @@ import com.platform.fight.pojo.User;
 import com.platform.fight.service.interfaces.IBotService;
 import com.platform.fight.service.utils.UserDetailsImpl;
 import com.platform.fight.utils.RedisKeyUtils;
+import com.platform.fight.utils.UserHolder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -34,9 +35,11 @@ public class BotServiceImpl implements IBotService {
 
     @Override
     public Map<String, String> add(Map<String, String> data) {
-        UsernamePasswordAuthenticationToken authenticationToken = (UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
-        UserDetailsImpl principal = (UserDetailsImpl) authenticationToken.getPrincipal();
-        User user = principal.getUser();
+//        UsernamePasswordAuthenticationToken authenticationToken = (UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
+//        UserDetailsImpl principal = (UserDetailsImpl) authenticationToken.getPrincipal();
+//        User user = principal.getUser();
+
+        User user = UserHolder.holder.get();
 
         String title = data.get("title");
 
@@ -94,9 +97,11 @@ public class BotServiceImpl implements IBotService {
      */
     @Override
     public Map<String, String> remove(Map<String, String> data) {
-        UsernamePasswordAuthenticationToken authenticationToken = (UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
-        UserDetailsImpl principal = (UserDetailsImpl) authenticationToken.getPrincipal();
-        User user = principal.getUser();
+//        UsernamePasswordAuthenticationToken authenticationToken = (UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
+//        UserDetailsImpl principal = (UserDetailsImpl) authenticationToken.getPrincipal();
+//        User user = principal.getUser();
+        User user = UserHolder.holder.get();
+
         Bot existBot = botMapper.selectById(data.get("bot_id"));
 
         Map<String, String> map = new HashMap<>();
@@ -175,9 +180,11 @@ public class BotServiceImpl implements IBotService {
 
     @Override
     public List<Bot> getList() {
-        UsernamePasswordAuthenticationToken authenticationToken = (UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
-        UserDetailsImpl principal = (UserDetailsImpl) authenticationToken.getPrincipal();
-        User user = principal.getUser();
+//        UsernamePasswordAuthenticationToken authenticationToken = (UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
+//        UserDetailsImpl principal = (UserDetailsImpl) authenticationToken.getPrincipal();
+//        User user = principal.getUser();
+
+        User user = UserHolder.holder.get();
 
         // bot 用hash存比较合适，并不是所有时候都需要查询所有的信息，大多数时候不需要看内容。
         String key = RedisKeyUtils.BOT_KEY + user.getId();

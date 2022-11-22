@@ -45,6 +45,7 @@ public class GetRecordListServiceImpl implements IGetRecordListService {
 
         // 查询出用户的信息，然后用 userId 和 photo username 做一个映射
         List<User> users = userMapper.selectBatchIds(ids);
+
         MultiValueMap<Integer, String> idToInfo = new LinkedMultiValueMap<>();
         for (int i = 0; i < users.size(); i++) {
             User curUser = users.get(i);

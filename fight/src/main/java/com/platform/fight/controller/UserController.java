@@ -25,7 +25,6 @@ public class UserController {
     @GetMapping("/account/info/")
     public Map<String, String> getInfo() {
         // token 会被 security 解析，用于获取用户
-        System.out.println("获取用户信息");
         rankListService.saveToRedis();
         return userService.getInfo();
     }
