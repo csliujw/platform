@@ -15,9 +15,9 @@ import java.util.concurrent.*;
 
 // 控制代码的执行时间
 @Component
-public class Consumer extends Thread {
+public class Consumer {
     private BotDTO bot;
-    private ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(10, 50, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>(100));
+    private static ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(10, 50, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>(100));
 
     private static RestTemplate restTemplate;
     private static final String RECEIVE_BOT_MOVE_URL = "http://127.0.0.1:8080/pk/receive/bot/move/";
@@ -33,11 +33,12 @@ public class Consumer extends Thread {
     public void startTimeout(long timeout, TimeUnit unit, BotDTO bot) {
         this.bot = bot;
         Future<Boolean> submit = threadPoolExecutor.submit(() -> {
-            start();
+            executeCode();
             return true;
         });
+
         try {
-            // 设置最大执行时间
+            // 使用 FutureTask 设置最大执行时间
             submit.get(timeout, unit);
         } catch (ExecutionException | InterruptedException | TimeoutException e) {
             e.printStackTrace();
@@ -60,8 +61,7 @@ public class Consumer extends Thread {
         restTemplate.postForObject(RECEIVE_BOT_MOVE_URL, data, String.class);
     }
 
-    @Override
-    public void run() {
+    public void executeCode() {
         if (botCodeInterface == null) {
             UUID uuid = UUID.randomUUID();
             String uid = uuid.toString().substring(0, 8);

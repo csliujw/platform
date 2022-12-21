@@ -16,7 +16,6 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
-
 public class Game {
     final private Integer rows;
     final private Integer cols;
@@ -268,6 +267,7 @@ public class Game {
     public class MapUtil {
         // 判断输赢
         private void judge() {
+            // 身体
             List<Cell> cellsBlue = playerBlue.getCells();
             List<Cell> cellsRed = playerRed.getCells();
             boolean validBlue = checkValid(cellsBlue, cellsRed);

@@ -4,6 +4,9 @@ public class Main {
     // 该工具类为将远程发送过来的 bot 代码执行。
     static DynamicCompiler dynamicCompiler = new DynamicCompiler();
 
+    /*
+    *
+    * */
     public static void main(String[] args) throws Exception {
         String sonCode = "package com.platform.bot.utils;\n" +
                 "\n" +
@@ -48,6 +51,13 @@ public class Main {
         Class<?> sonClass = dynamicCompiler.compileToClass("com.platform.bot.utils.BotCode", sonCode);
         BotCodeInterface o = (BotCodeInterface) sonClass.getDeclaredConstructor().newInstance();
         Integer integer = o.nextMove("1");
+        sonClass = null;
+        o = null;
         System.out.println(integer);
+        System.in.read();
+        System.gc();
+        System.in.read();
+        System.gc();
+        System.in.read();
     }
 }

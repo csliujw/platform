@@ -44,7 +44,7 @@ public class UserDetailServiceImpl implements UserDetailsService {
         // 用戶在 redis 中
         if (userInfomation != null && userInfomation.size() != 0) {
             user = BeanUtil.mapToBean(userInfomation, User.class, true);
-            redisTemplate.expire(keys, 30 * 60, TimeUnit.SECONDS);
+            redisTemplate.expire(keys, 30, TimeUnit.MINUTES);
             return user;
         }
 
@@ -59,7 +59,7 @@ public class UserDetailServiceImpl implements UserDetailsService {
                 .setFieldValueEditor((key, value) -> value.toString()));
 
         redisTemplate.opsForHash().putAll(keys, map);
-        redisTemplate.expire(keys, 30 * 60, TimeUnit.SECONDS);
+        redisTemplate.expire(keys, 30, TimeUnit.MINUTES);
         return user;
     }
 }

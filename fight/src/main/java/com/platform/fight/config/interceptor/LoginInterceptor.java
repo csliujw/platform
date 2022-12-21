@@ -9,7 +9,6 @@ import javax.servlet.http.HttpServletResponse;
 
 public class LoginInterceptor implements HandlerInterceptor {
 
-
     // 用拦截器清除 ThreadLocal 中的数据
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, @Nullable Exception ex) throws Exception {
         UserHolder.holder.remove();
