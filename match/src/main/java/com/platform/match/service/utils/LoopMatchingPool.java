@@ -1,42 +1,29 @@
-package com.platform.match.service;
+package com.platform.match.service.utils;
 
 import com.platform.match.dto.Player;
 import com.platform.match.utils.GenerateMachinePlayer;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.ReentrantLock;
 
-@Component
+//@Component
+/**
+ * @author payphone
+ * @date 2022-12-13
+ * 完成锁粒度的细化，使用 temporary 暂存需要匹配的人，用 temporaryLock 控制添加用户的并发。新增用户不再直接新增到匹配池中。
+ */
 public class LoopMatchingPool extends MatchingPool {
 
     private static List<Player> players = new ArrayList<>();
-    private static List<Player> temporary = new ArrayList<>(); // 细化加锁粒度，增加并发度
-    private static ReentrantLock temporaryLock = new ReentrantLock(); // 细化加锁粒度，增加并发度
-    private static ConcurrentHashMap<Integer, Boolean> needRemove = new ConcurrentHashMap<>();
+
 
     @Autowired
     public void setRestTemplate(RestTemplate restTemplate) {
         LoopMatchingPool.restTemplate = restTemplate;
     }
 
-    // 这里考虑到并发粒度的问题，额外采用一个 tmpList 暂存新加入的用户。
-    public void addPlayer(Integer userId, Integer rating, Integer botId) {
-        temporaryLock.lock();
-        try {
-            temporary.add(new Player(userId, rating, 8, botId));
-        } finally {
-            temporaryLock.unlock();
-        }
-    }
-
-    public void removePlayer(Integer userId) {
-        needRemove.put(userId, true);
-    }
 
     protected void playerWithMatching(boolean[] used, int i, Player people) {
         if (people.getBotId() == -100) {
@@ -69,12 +56,15 @@ public class LoopMatchingPool extends MatchingPool {
     public void matchPlayers() {  // 尝试匹配所有玩家
         boolean[] used = new boolean[players.size()];
         for (int i = 0; i < players.size(); i++) {
-            // 已经被用过了，或者需要移除。此处可能出现，还没把元素 put 进去，就走到了 get 方法，这种情况认为用户取消不及时。是合理的。
-            if (used[i] || needRemove.get(i) != null) continue;
-            // 判断是否是人机对战
             Player people = players.get(i);
+            // 已经被用过了，或者需要移除。此处可能出现，还没把元素 put 进去，就走到了 get 方法，这种情况认为用户取消不及时。是合理的。
+            // hashmap 通过 hashCode+equals 判断是否是同一个对象的，而 Integer 类重写了 hashCode 方法，返回的就是数值
+            if (used[i] || needRemove.containsKey(people.getUserId())) continue;
+
+            // 判断是否是人机对战
             playerWithMatching(used, i, people);
 
+            // 轮询匹配
             for (int j = i + 1; j < players.size(); j++) {
                 if (used[j]) continue;
                 Player a = players.get(i), b = players.get(j);
@@ -98,6 +88,7 @@ public class LoopMatchingPool extends MatchingPool {
         try {
             temporaryLock.lock();
             newPlayers.addAll(temporary);
+            temporary.clear();
         } finally {
             temporaryLock.unlock();
         }

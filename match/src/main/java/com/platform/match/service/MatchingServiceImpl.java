@@ -1,5 +1,6 @@
 package com.platform.match.service;
 
+import com.platform.match.service.utils.MatchingPool;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -13,7 +14,7 @@ public class MatchingServiceImpl implements IMatchingService {
     public static MatchingPool matchingPool;
 
     @Autowired
-    @Qualifier("quickMatchingPool")
+    @Qualifier("balanceMatchingPool")
     public void setMatchingPool(MatchingPool matchingPool) {
         MatchingServiceImpl.matchingPool = matchingPool;
     }
