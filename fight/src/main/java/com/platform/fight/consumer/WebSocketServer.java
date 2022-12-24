@@ -36,6 +36,8 @@ public class WebSocketServer {
     public static RestTemplate restTemplate;
     public static StringRedisTemplate stringRedisTemplate;
     public Game game = null;
+
+    // 记录用户 id 和会话的关系
     public static final ConcurrentHashMap<Integer, WebSocketServer> users = new ConcurrentHashMap<>();
 
     // 那个用户的会话
@@ -75,8 +77,7 @@ public class WebSocketServer {
     @OnOpen
     public void onOpen(Session session, @PathParam("token") String token) throws IOException {
         this.session = session;
-        System.out.println("connected");
-
+        // System.out.println("connected");
         Integer userId = JWTAuthentication.getUserId(token);
         this.user = userMapper.selectById(userId);
         if (this.user != null) {
@@ -88,9 +89,9 @@ public class WebSocketServer {
 
     @OnClose
     public void onClose() throws IOException {
-        // 关闭会话，移除用户，移除匹配池，可能匹配成功的一瞬间，用户断开连接了（故意关闭窗口）此时要进行特判。但是我們還會把他匹配到一塊
-        // 因爲幾秒后就會判斷他輸
-        System.out.println("close websocket");
+        // 关闭会话，移除用户，移除匹配池，可能匹配成功的一瞬间，用户断开连接了（故意关闭窗口）此时要进行特判。但是还会把他匹配到一块
+        // 因为几秒后就会判断他输了
+        // System.out.println("close websocket");
         if (this.user != null) {
             users.remove(user.getId());
         }
@@ -148,7 +149,7 @@ public class WebSocketServer {
 
 
     public void startMatching(Integer botId) {
-        System.out.println("start matching, 当前的匹配类型是" + botId);
+        // System.out.println("start matching, 当前的匹配类型是" + botId);
         // 向匹配系统发送请求
         MultiValueMap<String, String> data = new LinkedMultiValueMap<>();
         data.add("userId", this.user.getId().toString());
@@ -158,7 +159,7 @@ public class WebSocketServer {
     }
 
     public void stopMatching() {
-        System.out.println("stop matching");
+        // System.out.println("stop matching");
         // 向匹配系统发送请求
         MultiValueMap<String, String> data = new LinkedMultiValueMap<>();
         data.add("userId", this.user.getId().toString());
@@ -167,7 +168,7 @@ public class WebSocketServer {
 
     @OnMessage
     public void onMessage(String message, Session session) {
-        System.out.format("receive message %s", message);
+        // System.out.format("receive message %s", message);
         JSONObject data = JSONObject.parseObject(message);
         String event = data.getString("event");
 

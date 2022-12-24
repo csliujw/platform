@@ -16,6 +16,7 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
+// 游戏类，负责地图的生成，游戏输赢的判断，地图信息的编码等
 public class Game {
     final private Integer rows;
     final private Integer cols;

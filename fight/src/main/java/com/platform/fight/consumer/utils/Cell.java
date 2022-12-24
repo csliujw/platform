@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+// 蛇的每一节 Cell
 public class Cell {
     int x, y;
 }

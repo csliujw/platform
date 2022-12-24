@@ -94,9 +94,9 @@ public class BotServiceImpl implements IBotService {
      */
     @Override
     public Map<String, String> remove(Map<String, String> data) {
-//        UsernamePasswordAuthenticationToken authenticationToken = (UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
-//        UserDetailsImpl principal = (UserDetailsImpl) authenticationToken.getPrincipal();
-//        User user = principal.getUser();
+        // UsernamePasswordAuthenticationToken authenticationToken = (UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
+        // UserDetailsImpl principal = (UserDetailsImpl) authenticationToken.getPrincipal();
+        // User user = principal.getUser();
         User user = UserHolder.holder.get();
 
         Bot existBot = botMapper.selectById(data.get("bot_id"));
@@ -177,9 +177,9 @@ public class BotServiceImpl implements IBotService {
 
     @Override
     public List<Bot> getList() {
-//        UsernamePasswordAuthenticationToken authenticationToken = (UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
-//        UserDetailsImpl principal = (UserDetailsImpl) authenticationToken.getPrincipal();
-//        User user = principal.getUser();
+        // UsernamePasswordAuthenticationToken authenticationToken = (UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
+        // UserDetailsImpl principal = (UserDetailsImpl) authenticationToken.getPrincipal();
+        // User user = principal.getUser();
 
         User user = UserHolder.holder.get();
 

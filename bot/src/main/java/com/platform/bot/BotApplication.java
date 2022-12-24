@@ -11,9 +11,9 @@ import java.util.concurrent.Executors;
 public class BotApplication {
 
     public static void main(String[] args) {
+        SpringApplication.run(BotApplication.class, args);
         ExecutorService threadPool = Executors.newFixedThreadPool(1);
         // 会吃掉异常
         threadPool.submit(BotRunningServiceImpl.botPool::execute);
-        SpringApplication.run(BotApplication.class, args);
     }
 }

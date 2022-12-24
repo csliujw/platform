@@ -2,7 +2,7 @@ package com.platform.fight.controller;
 
 import com.platform.fight.pojo.Bot;
 import com.platform.fight.service.BotServiceImpl;
-import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -10,8 +10,9 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/user")
-@AllArgsConstructor
 public class BotController {
+
+    @Autowired
     private BotServiceImpl botService;
 
     @GetMapping("/bot/getlist/")

@@ -15,7 +15,7 @@ public class BotPool {
         botsQueue.add(new BotDTO(userId, botCode, input));
     }
 
-    // 消费一个bot，设置最大运行时间为 2s
+    // 消费一个bot，设置最大运行时间为 2s，采用 FutureTask
     private void consume(BotDTO bot) {
         Consumer consumer = new Consumer();
         consumer.startTimeout(2000, TimeUnit.SECONDS, bot);
