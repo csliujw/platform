@@ -26,7 +26,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 @Component
-@ServerEndpoint("/websocket/{token}") // 注意不要以'/'结尾
+// 注意不要以'/'结尾
+@ServerEndpoint("/websocket/{token}")
 @SuppressWarnings("all")
 // 不是 Spring 的组件，不是单例模式，是多例的
 public class WebSocketServer {
