@@ -44,11 +44,11 @@ public class QuickMatchingPool extends MatchingPool {
         }
     }
 
-    // 判断两名玩家是否匹配
-    protected boolean checkMatched(Player a, Player b) {
-        int ratingDelta = Math.abs(a.getRating() - b.getRating());
-        int waitingTime = Math.min(a.getWaitingTime(), b.getWaitingTime());
-        return ratingDelta <= waitingTime * 10;
+    public QuickMatchingPool() {
+    }
+
+    public QuickMatchingPool(MatcherRule rule) {
+        this.matcherRule = rule;
     }
 
     @Override
@@ -76,14 +76,14 @@ public class QuickMatchingPool extends MatchingPool {
             if (higher == null && lower == null) continue;
 
             // 匹配
-            if (higher != null && checkMatched(player, higher)) {
+            if (higher != null && matcherRule.matcher(player, higher)) {
                 sendResult(player, higher);
                 System.out.println("匹配到高分段人选");
                 iterator.remove();
                 continue;
             }
 
-            if (lower != null && checkMatched(player, lower)) {
+            if (lower != null && matcherRule.matcher(player, lower)) {
                 System.out.println("匹配到低分段人选");
                 sendResult(player, lower);
                 iterator.remove();

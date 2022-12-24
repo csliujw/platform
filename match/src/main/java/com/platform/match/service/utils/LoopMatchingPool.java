@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 //@Component
+
 /**
  * @author payphone
  * @date 2022-12-13
@@ -18,12 +19,10 @@ public class LoopMatchingPool extends MatchingPool {
 
     private static List<Player> players = new ArrayList<>();
 
-
     @Autowired
     public void setRestTemplate(RestTemplate restTemplate) {
         LoopMatchingPool.restTemplate = restTemplate;
     }
-
 
     protected void playerWithMatching(boolean[] used, int i, Player people) {
         if (people.getBotId() == -100) {
@@ -44,13 +43,10 @@ public class LoopMatchingPool extends MatchingPool {
         }
     }
 
-    // 判断两名玩家是否匹配
-    protected boolean checkMatched(Player a, Player b) {
-        int ratingDelta = Math.abs(a.getRating() - b.getRating());
-        int waitingTime = Math.min(a.getWaitingTime(), b.getWaitingTime());
-        return ratingDelta <= waitingTime * 10;
+    public LoopMatchingPool(){}
+    public LoopMatchingPool(MatcherRule rule){
+        this.matcherRule = rule;
     }
-
 
     @Override
     public void matchPlayers() {  // 尝试匹配所有玩家
@@ -68,7 +64,7 @@ public class LoopMatchingPool extends MatchingPool {
             for (int j = i + 1; j < players.size(); j++) {
                 if (used[j]) continue;
                 Player a = players.get(i), b = players.get(j);
-                if (checkMatched(a, b)) {
+                if (matcherRule.matcher(a, b)) {
                     used[i] = used[j] = true;
                     sendResult(a, b);
                     break;

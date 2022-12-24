@@ -9,6 +9,7 @@ import java.util.PriorityQueue;
 import java.util.TreeSet;
 
 // 待机时间长的用户优先匹配
+
 /**
  * @author payphone
  * @date 2022-12-13
@@ -19,6 +20,14 @@ public class BalanceMatchingPool extends MatchingPool {
 
     private static PriorityQueue<Player> maxHeap = new PriorityQueue<>((a, b) -> b.getWaitingTime() - a.getWaitingTime());
     private static TreeSet<Player> players = new TreeSet<>(Comparator.comparingInt(Player::getRating));
+
+    public BalanceMatchingPool() {
+    }
+
+    // 可更具需求自定义匹配规则
+    public BalanceMatchingPool(MatcherRule rule) {
+        this.matcherRule = rule;
+    }
 
     protected boolean playerWithMatching(Player people) {
         if (people.getBotId() == -100) {
@@ -39,13 +48,6 @@ public class BalanceMatchingPool extends MatchingPool {
                 player.setWaitingTime(player.getWaitingTime() + 1);
             }
         }
-    }
-
-    // 判断两名玩家是否匹配
-    protected boolean checkMatched(Player a, Player b) {
-        int ratingDelta = Math.abs(a.getRating() - b.getRating());
-        int waitingTime = Math.min(a.getWaitingTime(), b.getWaitingTime());
-        return ratingDelta <= waitingTime * 10;
     }
 
 
@@ -70,7 +72,7 @@ public class BalanceMatchingPool extends MatchingPool {
             // 无合适的匹配对象
             if (higher == null && lower == null) continue;
 
-            if (higher != null && checkMatched(next, higher)) {
+            if (higher != null && matcherRule.matcher(next, higher)) {
                 sendResult(next, higher);
                 System.out.println("匹配到高分段人选");
                 players.remove(next);
@@ -78,7 +80,7 @@ public class BalanceMatchingPool extends MatchingPool {
                 continue;
             }
 
-            if (lower != null && checkMatched(next, lower)) {
+            if (lower != null && matcherRule.matcher(next, lower)) {
                 System.out.println("匹配到低分段人选");
                 sendResult(next, lower);
                 players.remove(next);

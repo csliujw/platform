@@ -1,6 +1,8 @@
 package com.platform.match.service.utils;
 
 import com.platform.match.dto.Player;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
@@ -16,11 +18,25 @@ import java.util.concurrent.locks.ReentrantLock;
 public abstract class MatchingPool {
 
     protected static RestTemplate restTemplate;
-    protected static final String FIGHT_START_GAME_URL = "http://127.0.0.1:8080/pk/start/game/";
-    protected static final ReentrantLock lock = new ReentrantLock();
     protected static List<Player> temporary = new ArrayList<>();
     protected static ConcurrentHashMap<Integer, Boolean> needRemove = new ConcurrentHashMap<>();
     protected static final ReentrantLock temporaryLock = new ReentrantLock();
+    protected static final String FIGHT_START_GAME_URL = "http://127.0.0.1:8080/pk/start/game/";
+    protected static final ReentrantLock lock = new ReentrantLock();
+
+    // 定义一个默认的匹配规则。
+    protected MatcherRule matcherRule = (blue, red) -> {
+        int ratingDelta = Math.abs(blue.getRating() - red.getRating());
+        int waitingTime = Math.min(blue.getWaitingTime(), red.getWaitingTime());
+        return ratingDelta <= waitingTime * 10;
+    };
+
+    @Autowired
+    @Qualifier("matcherByRating2")
+    public void setMatcherRule(MatcherRule rule) {
+        this.matcherRule = rule;
+    }
+
 
     // 这里考虑到并发粒度的问题，额外采用一个 tmpList 暂存新加入的用户。
     public void addPlayer(Integer userId, Integer rating, Integer botId) {
@@ -37,6 +53,7 @@ public abstract class MatchingPool {
     public void removePlayer(Integer userId) {
         needRemove.put(userId, true);
     }
+
 
     // 增加游戏用户的等待时间
     public abstract void increaseWaitingTime();
