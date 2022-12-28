@@ -9,6 +9,7 @@ import com.platform.fight.pojo.User;
 import com.platform.fight.utils.MachinePlayerUtils;
 import com.platform.game.consumer.utils.Game;
 import com.platform.game.consumer.utils.JWTAuthentication;
+import com.platform.game.utils.RabbitMQUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
@@ -36,6 +37,8 @@ public class WebSocketServer {
     public static UserMapper userMapper;
     public static RestTemplate restTemplate;
     public static StringRedisTemplate stringRedisTemplate;
+    public static RabbitMQUtils rabbitMQUtils;
+
     public Game game = null;
 
     // 记录用户 id 和会话的关系
@@ -49,6 +52,11 @@ public class WebSocketServer {
     private static final String MATCH_ADD_URL = "http://localhost:8081/player/add/";
     private static final String MATCH_REMOVE_URL = "http://localhost:8081/player/remove/";
     private static ThreadPoolExecutor threadPool = new ThreadPoolExecutor(20, 50, 600, TimeUnit.SECONDS, new ArrayBlockingQueue<>(500));
+
+    @Autowired
+    public void setRabbitMQUtils(RabbitMQUtils rabbitMQUtils) {
+        WebSocketServer.rabbitMQUtils = rabbitMQUtils;
+    }
 
     @Autowired
     public void setUserMapper(UserMapper userMapper) {

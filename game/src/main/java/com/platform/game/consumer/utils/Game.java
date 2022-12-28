@@ -1,11 +1,12 @@
 package com.platform.game.consumer.utils;
 
+import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
-import com.baomidou.mybatisplus.extension.toolkit.SqlRunner;
 import com.platform.fight.pojo.Bot;
 import com.platform.fight.pojo.Record;
 import com.platform.fight.pojo.User;
+import com.platform.fight.pojo.UserDTO;
 import com.platform.game.consumer.WebSocketServer;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -214,8 +215,9 @@ public class Game {
 
     // 更新用户积分和对局总数
     private void updateUserRating(Player one, boolean win) {
-        int rating = win ? 5 : -5;
-        SqlRunner.db().update("update user set rating = rating + {0},count=count+1 where id = {1}", rating, one.getId());
+        User user = new User();
+        user.setId(one.getId());
+        WebSocketServer.rabbitMQUtils.sendMsg2RatingQueue(JSONUtil.toJsonStr(new UserDTO(user, win)));
     }
 
     private void updateRecord() {
@@ -233,12 +235,11 @@ public class Game {
                 loser,
                 new Date()
         );
-        WebSocketServer.recordMapper.insert(record);
+
+        WebSocketServer.rabbitMQUtils.sendMsg2RecordQueue(JSONUtil.toJsonStr(record));
     }
 
     private void saveToDatabase() {
-        updateUserRating(playerBlue, true);
-
         boolean blueWin = false;
         // 如果有一方是机器人，则只保存对局，不增加对战分数。
         if (playerBlue.getBotId() < -1 || playerRed.getBotId() < -1) {
