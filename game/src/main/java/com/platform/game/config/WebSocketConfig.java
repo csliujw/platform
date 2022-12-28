@@ -1,4 +1,4 @@
-package com.platform.fight.config;
+package com.platform.game.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

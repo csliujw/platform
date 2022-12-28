@@ -1,6 +1,6 @@
-package com.platform.fight.controller;
+package com.platform.game.controller;
 
-import com.platform.fight.consumer.WebSocketServer;
+import com.platform.game.consumer.WebSocketServer;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

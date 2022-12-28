@@ -1,14 +1,14 @@
-package com.platform.fight.consumer;
+package com.platform.game.consumer;
 
 import com.alibaba.fastjson.JSONObject;
-import com.platform.fight.consumer.utils.Game;
-import com.platform.fight.consumer.utils.JWTAuthentication;
 import com.platform.fight.mapper.BotMapper;
 import com.platform.fight.mapper.RecordMapper;
 import com.platform.fight.mapper.UserMapper;
 import com.platform.fight.pojo.Bot;
 import com.platform.fight.pojo.User;
 import com.platform.fight.utils.MachinePlayerUtils;
+import com.platform.game.consumer.utils.Game;
+import com.platform.game.consumer.utils.JWTAuthentication;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
@@ -92,7 +92,6 @@ public class WebSocketServer {
     public void onClose() throws IOException {
         // 关闭会话，移除用户，移除匹配池，可能匹配成功的一瞬间，用户断开连接了（故意关闭窗口）此时要进行特判。但是还会把他匹配到一块
         // 因为几秒后就会判断他输了
-        // System.out.println("close websocket");
         if (this.user != null) {
             users.remove(user.getId());
         }

@@ -1,11 +1,12 @@
-package com.platform.fight.consumer.utils;
+package com.platform.game.consumer.utils;
 
 import com.alibaba.fastjson.JSONObject;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.platform.fight.consumer.WebSocketServer;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.extension.toolkit.SqlRunner;
 import com.platform.fight.pojo.Bot;
 import com.platform.fight.pojo.Record;
 import com.platform.fight.pojo.User;
+import com.platform.game.consumer.WebSocketServer;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
@@ -193,11 +194,13 @@ public class Game {
     }
 
     private void sendResult() {  // 向两个Client公布结果
-        System.out.println("sendResult");
         JSONObject resp = new JSONObject();
         resp.put("event", "result");
         resp.put("loser", loser);
+        System.out.println("send result1");
         saveToDatabase();
+        System.out.println("send result2");
+
         // 将可能存在的机器人移除 users
         if (playerRed.getId() != null && playerRed.getId() < -1) {
             WebSocketServer.users.remove(playerRed.getId());
@@ -210,13 +213,9 @@ public class Game {
     }
 
     // 更新用户积分和对局总数
-    private void updateUserRating(Player one, Integer rating) {
-        User user = WebSocketServer.userMapper.selectById(one.getId());
-        user.setRating(rating);
-        user.setCount(user.getCount() + 1);
-        QueryWrapper<User> query = new QueryWrapper<>();
-        query.eq("id", one.getId());
-        WebSocketServer.userMapper.update(user, query);
+    private void updateUserRating(Player one, boolean win) {
+        int rating = win ? 5 : -5;
+        SqlRunner.db().update("update user set rating = rating + {0},count=count+1 where id = {1}", rating, one.getId());
     }
 
     private void updateRecord() {
@@ -238,26 +237,19 @@ public class Game {
     }
 
     private void saveToDatabase() {
+        updateUserRating(playerBlue, true);
+
+        boolean blueWin = false;
         // 如果有一方是机器人，则只保存对局，不增加对战分数。
         if (playerBlue.getBotId() < -1 || playerRed.getBotId() < -1) {
             // 説明有一方是機器人，不更新天梯分数。只记录对局信息。
             updateRecord();
         } else {
-            // 用戶的查詢要修改下。
-            Integer ratingBlue = WebSocketServer.userMapper.selectById(playerBlue.getId()).getRating();
-            Integer ratingRed = WebSocketServer.userMapper.selectById(playerRed.getId()).getRating();
-            if ("Blue".equals(loser)) {
-                // Blue 输了 -5 分 红方+10分
-                ratingBlue = ratingBlue < 800 ? ratingBlue - 5 : ratingBlue - 2;
-                ratingRed = ratingRed > 1500 ? ratingRed + 5 : ratingRed + 10;
-            } else if ("Red".equals(loser)) {
-                // Red 輸了 -5 分 或 2 分
-                ratingRed = ratingRed < 800 ? ratingRed - 5 : ratingRed - 2;
-                ratingBlue = ratingBlue > 1500 ? ratingBlue + 5 : ratingBlue + 1;
-                // Blue 赢了 + 10 分 或 5 分
+            if ("Red".equals(loser)) {
+                blueWin = true;
             }
-            updateUserRating(playerBlue, ratingBlue);
-            updateUserRating(playerRed, ratingRed);
+            updateUserRating(playerBlue, blueWin);
+            updateUserRating(playerRed, !blueWin);
             updateRecord();
         }
     }
@@ -293,6 +285,7 @@ public class Game {
             }
         }
 
+        // dfs 检查地图的连通性
         private boolean checkConnectivity(int sx, int sy, int tx, int ty) {
             if (sx == tx && sy == ty) return true;
             gameMap[sx][sy] = 1;
@@ -318,6 +311,7 @@ public class Game {
                 }
             }
 
+            // 四周填充数字1（障碍物）
             for (int r = 0; r < Game.this.rows; r++) {
                 gameMap[r][0] = gameMap[r][Game.this.cols - 1] = 1;
             }
@@ -327,6 +321,7 @@ public class Game {
 
             Random random = new Random();
             for (int i = 0; i < Game.this.innerWallsCount / 2; i++) {
+                // 随机生成障碍物，对称。
                 for (int j = 0; j < 1000; j++) {
                     int r = random.nextInt(Game.this.rows);
                     int c = random.nextInt(Game.this.cols);
@@ -380,5 +375,12 @@ public class Game {
         }
     }
 
+    public static void main(String[] args) {
+        UpdateWrapper<User> wrapper = new UpdateWrapper<User>();
+        wrapper.eq("id", 1);
+        wrapper.setSql("'rating' = 'rating'+1");
+        System.out.println(wrapper.getSqlComment());
+
+    }
 }
 

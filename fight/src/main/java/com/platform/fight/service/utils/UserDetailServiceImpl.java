@@ -5,6 +5,7 @@ import cn.hutool.core.bean.copier.CopyOptions;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.platform.fight.mapper.UserMapper;
 import com.platform.fight.pojo.User;
+import com.platform.fight.utils.CacheClient;
 import com.platform.fight.utils.RedisKeyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;

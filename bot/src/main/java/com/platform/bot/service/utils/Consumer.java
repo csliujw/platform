@@ -21,7 +21,8 @@ public class Consumer {
     private static ThreadPoolExecutor waiting = new ThreadPoolExecutor(10, 50, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>(100));
 
     private static RestTemplate restTemplate;
-    private static final String RECEIVE_BOT_MOVE_URL = "http://127.0.0.1:8080/pk/receive/bot/move/";
+
+    private static final String RECEIVE_BOT_MOVE_URL = "http://127.0.0.1:8083/pk/receive/bot/move/";
 
     private static final DynamicCompiler dynamicCompiler = new DynamicCompiler();
     private static BotCodeInterface botCodeInterface;

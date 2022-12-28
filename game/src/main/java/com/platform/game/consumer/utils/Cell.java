@@ -1,4 +1,4 @@
-package com.platform.fight.consumer.utils;
+package com.platform.game.consumer.utils;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

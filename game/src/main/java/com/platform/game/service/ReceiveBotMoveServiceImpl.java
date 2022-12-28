@@ -1,8 +1,8 @@
-package com.platform.fight.service;
+package com.platform.game.service;
 
-import com.platform.fight.consumer.WebSocketServer;
-import com.platform.fight.consumer.utils.Game;
-import com.platform.fight.service.interfaces.IReceiveBotMoveService;
+import com.platform.game.consumer.WebSocketServer;
+import com.platform.game.consumer.utils.Game;
+import com.platform.game.service.interfaces.IReceiveBotMoveService;
 import org.springframework.stereotype.Service;
 
 @Service

@@ -10,6 +10,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -24,6 +25,7 @@ import java.util.function.Function;
 @SuppressWarnings("all")
 public class CacheClient {
     private final StringRedisTemplate stringRedisTemplate;
+    // 缓存 NULL 值的最大有效时间，单位秒
     private static final long CACHE_NULL_TTL = 60;
     private RedissonClient redissonClient;
     private static ThreadPoolExecutor CACHE_REBUILD_EXECUTOR = new ThreadPoolExecutor(20, 60, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>(200));
@@ -53,7 +55,7 @@ public class CacheClient {
         if (StrUtil.isNotBlank(data)) {
             return JSONUtil.toBean(data, type);
         }
-        // 命中空值，发生缓存穿透，直接返货错误信息
+        // 命中空值，发生缓存穿透，直接返回错误信息
         if (data != null) return null;
 
         // 如果只是未緩存到 Redis 中。
@@ -67,6 +69,32 @@ public class CacheClient {
         return apply;
     }
 
+    public <R, ID> List<R> queryWithPassThroughList(String keyPrefix, ID id, Class<R> elementType,
+                                                    Function<ID, List<R>> dbFallBack, Long time, TimeUnit unit) {
+        String key = keyPrefix + id;
+        String data = stringRedisTemplate.opsForValue().get(key);
+
+        // 存在，则直接返回
+        if (StrUtil.isNotBlank(data)) {
+            JSONUtil.toList(data, elementType);
+        }
+
+        // 命中空值，发生缓存穿透，直接返回错误信息
+        if (data != null) return null;
+
+        // 如果只是未緩存到 Redis 中。
+        List<R> apply = dbFallBack.apply(id);
+
+        if (apply == null) {
+            // 缓存空值
+            stringRedisTemplate.opsForValue().set(key, "", CACHE_NULL_TTL, TimeUnit.SECONDS);
+            return null;
+        }
+
+        this.set(key, apply, time, unit);
+        return apply;
+    }
+
     public <R, ID> R queryWithLogicExpire(String keyPrefix, ID id, Class<R> type,
                                           Function<ID, R> dbFallBack, Long time, TimeUnit unit) {
 
@@ -75,12 +103,11 @@ public class CacheClient {
         if (StrUtil.isBlank(data)) return null;
         RedisData redisData = JSONUtil.toBean(data, RedisData.class);
         LocalDateTime expireTime = redisData.getExpireTime();
+
         if (expireTime.isAfter(LocalDateTime.now())) {
             // 未过期
             return JSONUtil.toBean(redisData.getData().toString(), type);
         }
-
-        System.out.println("过期，缓存重建");
 
         // 过期，则重建缓存。为避免大量请求同时申请重建缓存，此处加锁，拿到锁的才能重建。沒拿到锁的返回旧数据
         RLock lock = redissonClient.getLock(keyPrefix + id + "_lock");

@@ -13,6 +13,7 @@
         <module>match</module>
         <module>fight</module>
         <module>bot</module>
+        <module>game</module>
     </modules>
 
     <groupId>com.platform</groupId>

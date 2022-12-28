@@ -8,13 +8,11 @@ import com.platform.fight.mapper.BotMapper;
 import com.platform.fight.pojo.Bot;
 import com.platform.fight.pojo.User;
 import com.platform.fight.service.interfaces.IBotService;
-import com.platform.fight.service.utils.UserDetailsImpl;
+import com.platform.fight.utils.CacheClient;
 import com.platform.fight.utils.RedisKeyUtils;
 import com.platform.fight.utils.UserHolder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -32,6 +30,9 @@ public class BotServiceImpl implements IBotService {
 
     @Autowired
     private StringRedisTemplate redisTemplate;
+
+    @Autowired
+    CacheClient cacheClient;
 
     @Override
     public Map<String, String> add(Map<String, String> data) {
@@ -118,9 +119,7 @@ public class BotServiceImpl implements IBotService {
 
     @Override
     public Map<String, String> update(Map<String, String> data) {
-        UsernamePasswordAuthenticationToken authenticationToken = (UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
-        UserDetailsImpl principal = (UserDetailsImpl) authenticationToken.getPrincipal();
-        User user = principal.getUser();
+        User user = UserHolder.holder.get();
 
         int botId = Integer.parseInt(data.get("bot_id"));
         String title = data.get("title");
@@ -132,6 +131,7 @@ public class BotServiceImpl implements IBotService {
             map.put("error_message", "标题不能为空");
             return map;
         }
+
         if (title.length() > 100) {
             map.put("error_message", "标题长度不能大于100");
             return map;
@@ -186,6 +186,7 @@ public class BotServiceImpl implements IBotService {
         // bot 用hash存比较合适，并不是所有时候都需要查询所有的信息，大多数时候不需要看内容。
         String key = RedisKeyUtils.BOT_KEY + user.getId();
         String value = redisTemplate.opsForValue().get(key);
+
         List<Bot> bots = null;
         if (value == null || "".equals(value.trim())) {
             // 说明 redis 中不存在

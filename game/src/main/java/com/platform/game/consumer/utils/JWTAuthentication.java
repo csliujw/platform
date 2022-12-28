@@ -1,4 +1,4 @@
-package com.platform.fight.consumer.utils;
+package com.platform.game.consumer.utils;
 
 import com.platform.fight.utils.JWTUtil;
 import io.jsonwebtoken.Claims;

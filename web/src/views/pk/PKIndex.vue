@@ -21,7 +21,7 @@ export default {
     // setup 方法中无法获得 this,应为它先于 vue 对象创建？
     setup() {
         const store = useStore()
-        const socketUrl = `ws://127.0.0.1:8080/websocket/${store.state.user.token}`;
+        const socketUrl = `ws://127.0.0.1:8083/websocket/${store.state.user.token}`;
         let socket = null;
         // 這個真的有必要嗎？有影响吗？
         store.commit("updateIsRecord", false);

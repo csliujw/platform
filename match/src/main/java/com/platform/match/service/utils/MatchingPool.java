@@ -21,7 +21,8 @@ public abstract class MatchingPool {
     protected static List<Player> temporary = new ArrayList<>();
     protected static ConcurrentHashMap<Integer, Boolean> needRemove = new ConcurrentHashMap<>();
     protected static final ReentrantLock temporaryLock = new ReentrantLock();
-    protected static final String FIGHT_START_GAME_URL = "http://127.0.0.1:8080/pk/start/game/";
+    // game 这个服务
+    protected static final String FIGHT_START_GAME_URL = "http://127.0.0.1:8083/pk/start/game/";
     protected static final ReentrantLock lock = new ReentrantLock();
 
     // 定义一个默认的匹配规则。

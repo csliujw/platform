@@ -1,6 +1,6 @@
-package com.platform.fight.controller;
+package com.platform.game.controller;
 
-import com.platform.fight.service.interfaces.IReceiveBotMoveService;
+import com.platform.game.service.interfaces.IReceiveBotMoveService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.PostMapping;
