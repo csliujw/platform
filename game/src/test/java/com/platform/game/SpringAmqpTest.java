@@ -21,7 +21,7 @@ public class SpringAmqpTest {
         // 消息
         String message = "hello, spring amqp!";
         // 发送消息，它怎么注册队列的？
-        rabbitTemplate.convertAndSend(queueName, message);
+        rabbitTemplate.convertAndSend("123", queueName, message);
         System.in.read();
     }
 }

@@ -17,8 +17,7 @@ public class AMQPCommonConfig implements ApplicationContextAware {
         // 设置ReturnCallback
         rabbitTemplate.setReturnCallback((message, replyCode, replyText, exchange, routingKey) -> {
             // 投递失败，记录日志
-            log.info("消息发送失败，应答码{}，原因{}，交换机{}，路由键{},消息{}",
-                    replyCode, replyText, exchange, routingKey, message);
+            log.info("消息发送失败，应答码{}，原因{}，交换机{}，路由键{},消息{}", replyCode, replyText, exchange, routingKey, message);
         });
     }
 }

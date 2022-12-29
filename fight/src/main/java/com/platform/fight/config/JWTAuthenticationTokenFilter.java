@@ -58,7 +58,7 @@ public class JWTAuthenticationTokenFilter extends OncePerRequestFilter {
         // 此处拦截到的都是用户登录成功后的请求，此时需要从 redis 中查询出数据，验证用户是否登录。
         User user = userDetailService.getUser(username);
         if (user == null) {
-            throw new RuntimeException("用户名未登录");
+            throw new RuntimeException("用户未登录");
         }
         // 用 security 验证用户是否合法。
         UserDetailsImpl loginUser = new UserDetailsImpl(user);

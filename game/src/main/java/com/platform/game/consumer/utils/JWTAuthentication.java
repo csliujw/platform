@@ -15,4 +15,15 @@ public class JWTAuthentication {
         }
         return userId;
     }
+
+    public static String getUserName(String token) {
+        String subject = null;
+        try {
+            Claims claims = JWTUtil.parseJWT(token);
+            subject = claims.getSubject();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return subject;
+    }
 }

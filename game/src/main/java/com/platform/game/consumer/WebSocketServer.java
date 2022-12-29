@@ -1,14 +1,14 @@
 package com.platform.game.consumer;
 
+import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSONObject;
-import com.platform.fight.mapper.BotMapper;
-import com.platform.fight.mapper.RecordMapper;
-import com.platform.fight.mapper.UserMapper;
 import com.platform.fight.pojo.Bot;
 import com.platform.fight.pojo.User;
-import com.platform.fight.utils.MachinePlayerUtils;
+import com.platform.fight.utils.RedisKeyUtils;
 import com.platform.game.consumer.utils.Game;
 import com.platform.game.consumer.utils.JWTAuthentication;
+import com.platform.game.mapper.BotMapper;
+import com.platform.game.utils.MachinePlayerUtils;
 import com.platform.game.utils.RabbitMQUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -30,14 +30,13 @@ import java.util.concurrent.TimeUnit;
 // 注意不要以'/'结尾
 @ServerEndpoint("/websocket/{token}")
 @SuppressWarnings("all")
-// 不是 Spring 的组件，不是单例模式，是多例的
+// 不是 Spring 的组件，不是单例的，是多例的
 public class WebSocketServer {
 
-    public static RecordMapper recordMapper;
-    public static UserMapper userMapper;
-    public static RestTemplate restTemplate;
     public static StringRedisTemplate stringRedisTemplate;
     public static RabbitMQUtils rabbitMQUtils;
+    public static RestTemplate restTemplate;
+    public static BotMapper botMapper;
 
     public Game game = null;
 
@@ -48,24 +47,13 @@ public class WebSocketServer {
     private User user;
     // 会话
     private Session session = null;
-    private static BotMapper botMapper;
     private static final String MATCH_ADD_URL = "http://localhost:8081/player/add/";
     private static final String MATCH_REMOVE_URL = "http://localhost:8081/player/remove/";
     private static ThreadPoolExecutor threadPool = new ThreadPoolExecutor(20, 50, 600, TimeUnit.SECONDS, new ArrayBlockingQueue<>(500));
 
     @Autowired
-    public void setRabbitMQUtils(RabbitMQUtils rabbitMQUtils) {
-        WebSocketServer.rabbitMQUtils = rabbitMQUtils;
-    }
-
-    @Autowired
-    public void setUserMapper(UserMapper userMapper) {
-        WebSocketServer.userMapper = userMapper;
-    }
-
-    @Autowired
-    public void setRecordMapper(RecordMapper recordMapper) {
-        WebSocketServer.recordMapper = recordMapper;
+    public void setBotMapper(BotMapper botMapper) {
+        WebSocketServer.botMapper = botMapper;
     }
 
     @Autowired
@@ -74,8 +62,8 @@ public class WebSocketServer {
     }
 
     @Autowired
-    public void setBotMapper(BotMapper botMapper) {
-        WebSocketServer.botMapper = botMapper;
+    public void setRabbitMQUtils(RabbitMQUtils rabbitMQUtils) {
+        WebSocketServer.rabbitMQUtils = rabbitMQUtils;
     }
 
     @Autowired
@@ -86,11 +74,17 @@ public class WebSocketServer {
     @OnOpen
     public void onOpen(Session session, @PathParam("token") String token) throws IOException {
         this.session = session;
-        // System.out.println("connected");
-        Integer userId = JWTAuthentication.getUserId(token);
-        this.user = userMapper.selectById(userId);
+
+        String userName = JWTAuthentication.getUserName(token);
+        String userStr = stringRedisTemplate.opsForValue().get(RedisKeyUtils.USER_KEY + userName);
+
+        this.user = (userStr != null && !"".equals(userStr)) ? JSONUtil.toBean(userStr, User.class) : null;
+
         if (this.user != null) {
-            users.put(userId, this);
+            users.put(this.user.getId(), this);
+            // checkUser 需要用到用戶信息。做一个 key-value 的映射
+            System.out.println("key-value 映射");
+            stringRedisTemplate.opsForValue().set(RedisKeyUtils.USER_KEY + user.getId(), RedisKeyUtils.USER_KEY + userName, 30, TimeUnit.MINUTES);
         } else {
             this.session.close();
         }
@@ -102,6 +96,7 @@ public class WebSocketServer {
         // 因为几秒后就会判断他输了
         if (this.user != null) {
             users.remove(user.getId());
+            restTemplate.delete(RedisKeyUtils.USER_KEY + user.getId());
         }
     }
 
@@ -109,6 +104,7 @@ public class WebSocketServer {
         // 红蓝双方 id,如果是机器人，则会自动生成一个机器人。
         User blueUser = checkAndSetUser(blueId);
         User redUser = checkAndSetUser(redId);
+
 
         Bot blueBot = checkAndSetBot(blueId, blueBotId);
         Bot redBot = checkAndSetBot(redId, redBotId);
@@ -154,7 +150,6 @@ public class WebSocketServer {
         generateOpponentAndGameInfo(blueUser, redUser, respGame);
         generateOpponentAndGameInfo(redUser, blueUser, respGame);
     }
-
 
     public void startMatching(Integer botId) {
         // System.out.println("start matching, 当前的匹配类型是" + botId);
@@ -234,6 +229,9 @@ public class WebSocketServer {
 
     private static Bot checkAndSetBot(Integer userId, Integer botId) {
         if (botId >= 0) {
+//            String botStr = stringRedisTemplate.opsForValue().get(RedisKeyUtils.BOT_KEY + botId);
+//            System.out.println("Bot Code:" + botStr);
+//            return (botStr != null && !"".equals(botStr)) ? JSONUtil.toBean(botStr, Bot.class) : null;
             return botMapper.selectById(botId);
         } else if (userId < -1 && botId < -1) {// 如果 blueId < 0 且 botId < -1 说明是机器人
             // 判断是否是机器，如果是机器会返回生成的一个机器人。
@@ -250,6 +248,9 @@ public class WebSocketServer {
             // 説明是機器人
             return new User(userId, "机器人", "", machinePhoto, 1000, 0);
         }
-        return userMapper.selectById(userId);
+        String key = stringRedisTemplate.opsForValue().get(RedisKeyUtils.USER_KEY + userId);
+        String userStr = stringRedisTemplate.opsForValue().get(key);
+        return (userStr != null && !"".equals(userStr)) ? JSONUtil.toBean(userStr, User.class) : null;
+        // return userMapper.selectById(userId);
     }
 }

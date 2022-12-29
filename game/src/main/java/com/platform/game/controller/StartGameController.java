@@ -1,12 +1,11 @@
 package com.platform.game.controller;
 
 import com.platform.game.consumer.WebSocketServer;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.Resource;
 import java.util.Objects;
 
 @RestController
@@ -22,4 +21,13 @@ public class StartGameController {
         WebSocketServer.startGame(blueId, blueBotId, redId, redBotId);
         return "start game success";
     }
+
+    @Resource
+    RabbitTemplate rabbitTemplate;
+
+    @GetMapping("/test/")
+    public void hello() {
+        rabbitTemplate.convertAndSend("cc", "queue", "hello");
+    }
+
 }

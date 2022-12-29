@@ -1,4 +1,4 @@
-package com.platform.fight.utils;
+package com.platform.game.utils;
 
 import com.platform.fight.pojo.Bot;
 
