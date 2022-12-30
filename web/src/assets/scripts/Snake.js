@@ -20,7 +20,7 @@ export class Snake extends GameObject {
         this.dc = [0, 1, 0, -1];
 
         this.step = 0; // 回合数
-        this.eps = 1e-2; // 允许的误差
+        this.eps = 1e-3; // 允许的误差
 
         this.eye_direction = 0;// 眼睛的方向 默认是上
         if (this.idx === 1) this.eye_direction = 2;// 左下角的蛇初始朝上，右上角的蛇朝下
@@ -39,7 +39,8 @@ export class Snake extends GameObject {
         ];
     }
 
-    start() {}
+    start() {
+    }
 
     set_direction(d) {
         this.direction = d;
@@ -63,6 +64,7 @@ export class Snake extends GameObject {
     }
 
     check_valid(cell) { // 检测目标位置是否合法
+        // 是否和墙碰撞了
         for (const wall of this.gamemap.walls) {
             if (wall.r === cell.r && wall.c === cell.c) return false;
         }
@@ -83,8 +85,7 @@ export class Snake extends GameObject {
     // 检测当前回合蛇的身体是否需要变长
     check_tail_increasing() {
         if (this.step <= 10) return true;
-        if (this.step % 3 === 1) return true;
-        return false;
+        return this.step % 3 === 1;
     }
 
     /**
