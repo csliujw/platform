@@ -51,16 +51,21 @@ public class BalanceMatchingPool extends MatchingPool {
     }
 
 
+    private void removePlayer(Player player) {
+        players.remove(player);
+        maxHeap.remove(player);
+    }
+
     @Override
     public void matchPlayers() {
-
-        for (int i = 0; i < maxHeap.size(); i++) {
+        int size = maxHeap.size();
+        // 遍历所有用户.
+        for (int i = 0; i < size; i++) {
             Player next = maxHeap.peek();
             // 用戶取消匹配
             if (needRemove.containsKey(next.getUserId())) {
                 needRemove.remove(next.getUserId());
-                maxHeap.remove(next);
-                players.remove(next);
+                removePlayer(next);
                 continue;
             }
 
@@ -69,27 +74,32 @@ public class BalanceMatchingPool extends MatchingPool {
             Player higher = players.higher(next);
             Player lower = players.lower(next);
 
-            // 无合适的匹配对象
+            // 无合适的匹配对象,则完成了一个对象的遍历,i+1 即可
             if (higher == null && lower == null) continue;
 
+
+            // 如果用户匹配到了对象,说明 i 还需要 ++(相当于一次遍历了两个元素)
             if (higher != null && matcherRule.matcher(next, higher)) {
                 sendResult(next, higher);
                 System.out.println("匹配到高分段人选");
-                players.remove(next);
-                maxHeap.remove(next);
+                removePlayer(next);
+                removePlayer(higher);
+                i++;
                 continue;
             }
 
             if (lower != null && matcherRule.matcher(next, lower)) {
                 System.out.println("匹配到低分段人选");
                 sendResult(next, lower);
-                players.remove(next);
-                maxHeap.remove(next);
+                removePlayer(next);
+                removePlayer(higher);
+                i++;
             }
         }
 
         // 新加入的用户加入匹配池
         try {
+            System.out.println("新用戶加入");
             temporaryLock.lock();
             players.addAll(temporary);
             maxHeap.addAll(temporary);

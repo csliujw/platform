@@ -16,7 +16,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReentrantLock;
 
 // 游戏类，负责地图的生成，游戏输赢的判断，地图信息的编码等
 public class Game {
@@ -28,7 +27,6 @@ public class Game {
     private final Player playerBlue, playerRed;
     private Integer nextStepBlue, nextStepRed;
 
-    private ReentrantLock lock = new ReentrantLock();
     private String status = "playing"; // playing finished
     private String loser = ""; // ALL 平局； Blue 输； Red 输
     private static final String addBotUrl = "http://127.0.0.1:8082/bot/add/";
@@ -63,24 +61,15 @@ public class Game {
     }
 
     public void setNextStepBlue(Integer nextStepBlue) {
-        lock.lock(); // 此处的加锁感觉没有必要。两个人在同一个线程中执行，操作的是不同的变量，不存在线程争用。
-        try {
-            this.nextStepBlue = nextStepBlue;
-        } finally {
-            lock.unlock();
-        }
+        this.nextStepBlue = nextStepBlue;
     }
 
     public void setNextStepRed(Integer nextStepRed) {
-        lock.lock();
-        try {
-            this.nextStepRed = nextStepRed;
-        } finally {
-            lock.unlock();
-        }
+        this.nextStepRed = nextStepRed;
     }
 
     public void run() {
+        // 最多走 500 步
         for (int i = 0; i < 500; i++) {
             if (nextStep()) {
                 mapUtil.judge();
@@ -88,24 +77,19 @@ public class Game {
                     sendMove();
                 } else {
                     sendResult();
-                    break;
+                    return;
                 }
             } else {
                 status = "finished";
-                lock.lock();
-                try {
-                    if (nextStepBlue == null && nextStepRed == null) {
-                        loser = "all";
-                    } else if (nextStepBlue == null) {
-                        loser = "Blue"; // Blue 没走，blue 输了
-                    } else {
-                        loser = "Red";
-                    }
-                } finally {
-                    lock.unlock();
+                if (nextStepBlue == null && nextStepRed == null) {
+                    loser = "all";
+                } else if (nextStepBlue == null) {
+                    loser = "Blue"; // Blue 没走，blue 输了
+                } else {
+                    loser = "Red";
                 }
                 sendResult();
-                break;
+                return;
             }
         }
     }
@@ -133,19 +117,12 @@ public class Game {
 
     // 等待两名玩家的下一步操作,都有下一步操作了，则将操作加入各自的 step 集合
     private boolean nextStep() {
-        try {
-            TimeUnit.MILLISECONDS.sleep(200);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
         sendBotCode(playerBlue);
         sendBotCode(playerRed);
 
         for (int i = 0; i < 50; i++) {
             try {
                 TimeUnit.MILLISECONDS.sleep(100);
-                lock.lock();
                 if (nextStepBlue != null && nextStepRed != null) {
                     playerBlue.getSteps().add(nextStepBlue);
                     playerRed.getSteps().add(nextStepRed);
@@ -153,8 +130,6 @@ public class Game {
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
-            } finally {
-                lock.unlock();
             }
         }
         return false;
@@ -166,7 +141,14 @@ public class Game {
         data.add("userId", player.getId().toString());
         data.add("botCode", player.getBotCode());
         data.add("input", getInput(player)); // 获取玩家的下一步输入
+
         WebSocketServer.restTemplate.postForObject(addBotUrl, data, String.class);
+
+        try {
+            TimeUnit.MILLISECONDS.sleep(300);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     private void sendAllMessage(String message) {
@@ -180,26 +162,22 @@ public class Game {
     }
 
     private void sendMove() {
-        lock.lock();
-        try {
-            JSONObject resp = new JSONObject();
-            resp.put("event", "move");
-            resp.put("blue_direction", nextStepBlue);
-            resp.put("red_direction", nextStepRed);
-            sendAllMessage(resp.toJSONString());
-            nextStepBlue = nextStepRed = null;
-            // 发送移动指令。
-        } finally {
-            lock.unlock();
-        }
+        JSONObject resp = new JSONObject();
+        resp.put("event", "move");
+        resp.put("blue_direction", nextStepBlue);
+        resp.put("red_direction", nextStepRed);
+        sendAllMessage(resp.toJSONString());
+        nextStepBlue = nextStepRed = null;
+        // 发送移动指令。
     }
 
     private void sendResult() {  // 向两个Client公布结果
         JSONObject resp = new JSONObject();
         resp.put("event", "result");
         resp.put("loser", loser);
-        System.out.println("send result1");
         saveToDatabase();
+
+        System.out.println("send result1");
         System.out.println("send result2");
 
         // 将可能存在的机器人移除 users

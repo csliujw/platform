@@ -33,6 +33,11 @@ public abstract class MatchingPool {
     };
 
     @Autowired
+    public void setRestTemplate(RestTemplate restTemplate) {
+        MatchingPool.restTemplate = restTemplate;
+    }
+
+    @Autowired
     @Qualifier("matcherByRating2")
     public void setMatcherRule(MatcherRule rule) {
         this.matcherRule = rule;
@@ -92,6 +97,7 @@ public abstract class MatchingPool {
         try {
             restTemplate.postForObject(FIGHT_START_GAME_URL, data, String.class);
         } catch (Exception e) {
+            e.printStackTrace();
             throw new RuntimeException("restTemplate 调用异常！");
         }
     }

@@ -51,8 +51,7 @@ export default {
                     store.commit("updatePlayGameInfo", data.game);
                     setTimeout(() => {
                         store.commit("updateStatus", "playing");
-                    }, 200);
-
+                    }, 100);
                 } else if (data.event === 'move') {
                     const gameObject = store.state.pk.gameMapObject;
                     const [blue, red] = gameObject.snakes;
@@ -60,6 +59,7 @@ export default {
                     console.log(data.blue_direction, data.red_direction);
                     blue.set_direction(data.blue_direction)
                     red.set_direction(data.red_direction)
+
                 } else if (data.event === 'result') {
                     console.log(data.event)
                     const game = store.state.pk.gameMapObject;

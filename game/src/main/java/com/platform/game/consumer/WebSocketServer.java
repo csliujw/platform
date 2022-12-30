@@ -96,7 +96,7 @@ public class WebSocketServer {
         // 因为几秒后就会判断他输了
         if (this.user != null) {
             users.remove(user.getId());
-            restTemplate.delete(RedisKeyUtils.USER_KEY + user.getId());
+            stringRedisTemplate.delete(RedisKeyUtils.USER_KEY + user.getId());
         }
     }
 

@@ -19,10 +19,7 @@ public class LoopMatchingPool extends MatchingPool {
 
     private static List<Player> players = new ArrayList<>();
 
-    @Autowired
-    public void setRestTemplate(RestTemplate restTemplate) {
-        LoopMatchingPool.restTemplate = restTemplate;
-    }
+
 
     protected void playerWithMatching(boolean[] used, int i, Player people) {
         if (people.getBotId() == -100) {
