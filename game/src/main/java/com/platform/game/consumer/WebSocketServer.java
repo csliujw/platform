@@ -1,13 +1,15 @@
 package com.platform.game.consumer;
 
-import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.platform.fight.pojo.Bot;
 import com.platform.fight.pojo.User;
 import com.platform.fight.utils.RedisKeyUtils;
 import com.platform.game.consumer.utils.Game;
 import com.platform.game.consumer.utils.JWTAuthentication;
 import com.platform.game.mapper.BotMapper;
+import com.platform.game.mapper.UserMapper;
+import com.platform.game.utils.CacheClient;
 import com.platform.game.utils.MachinePlayerUtils;
 import com.platform.game.utils.RabbitMQUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +39,8 @@ public class WebSocketServer {
     public static RabbitMQUtils rabbitMQUtils;
     public static RestTemplate restTemplate;
     public static BotMapper botMapper;
-
+    private static CacheClient cacheClient;
+    public static UserMapper userMapper;
     public Game game = null;
 
     // 记录用户 id 和会话的关系
@@ -51,9 +54,20 @@ public class WebSocketServer {
     private static final String MATCH_REMOVE_URL = "http://localhost:8081/player/remove/";
     private static ThreadPoolExecutor threadPool = new ThreadPoolExecutor(20, 50, 600, TimeUnit.SECONDS, new ArrayBlockingQueue<>(500));
 
+
+    @Autowired
+    public void setUserMapper(UserMapper userMapper) {
+        WebSocketServer.userMapper = userMapper;
+    }
+
     @Autowired
     public void setBotMapper(BotMapper botMapper) {
         WebSocketServer.botMapper = botMapper;
+    }
+
+    @Autowired
+    public void setCacheClient(CacheClient cacheClient) {
+        WebSocketServer.cacheClient = cacheClient;
     }
 
     @Autowired
@@ -76,15 +90,14 @@ public class WebSocketServer {
         this.session = session;
 
         String userName = JWTAuthentication.getUserName(token);
-        String userStr = stringRedisTemplate.opsForValue().get(RedisKeyUtils.USER_KEY + userName);
-
-        this.user = (userStr != null && !"".equals(userStr)) ? JSONUtil.toBean(userStr, User.class) : null;
+        String key = RedisKeyUtils.USER_KEY + userName;
+        this.user = cacheClient.queryHashWithPassThrough(key, new QueryWrapper<User>().eq("username", userName), User.class, userMapper::selectOne, 30L, TimeUnit.MINUTES);
 
         if (this.user != null) {
             users.put(this.user.getId(), this);
             // checkUser 需要用到用戶信息。做一个 key-value 的映射
             System.out.println("key-value 映射");
-            stringRedisTemplate.opsForValue().set(RedisKeyUtils.USER_KEY + user.getId(), RedisKeyUtils.USER_KEY + userName, 30, TimeUnit.MINUTES);
+            stringRedisTemplate.opsForValue().set(RedisKeyUtils.USER_KEY + user.getId(), userName, 30, TimeUnit.MINUTES);
         } else {
             this.session.close();
         }
@@ -144,6 +157,12 @@ public class WebSocketServer {
         respGame.put("red_id", game.getPlayerRed().getId());
         respGame.put("red_sx", game.getPlayerRed().getSx());
         respGame.put("red_sy", game.getPlayerRed().getSy());
+
+        // 如果都不是-1，即都是 bot代码对战，则前端用 array 暂存步数，然后开启定时器定期绘制对局信息，从而解决后端发送数据太快，前端来不及消费的问题。
+
+        System.out.println("blueBotiD=" + blueBotId);
+        System.out.println("redBotId=" + redBotId);
+        respGame.put("start_timer", blueBotId >= 0 && redBotId >= 0);
         respGame.put("gamemap", game.mapUtil.getGameMap());
 
         // 生成对局信息，并发送给双方。
@@ -229,12 +248,10 @@ public class WebSocketServer {
 
     private static Bot checkAndSetBot(Integer userId, Integer botId) {
         if (botId >= 0) {
-//            String botStr = stringRedisTemplate.opsForValue().get(RedisKeyUtils.BOT_KEY + botId);
-//            System.out.println("Bot Code:" + botStr);
-//            return (botStr != null && !"".equals(botStr)) ? JSONUtil.toBean(botStr, Bot.class) : null;
-            return botMapper.selectById(botId);
+            return cacheClient.queryWithPassThrough(RedisKeyUtils.BOT_KEY, botId, Bot.class, botMapper::selectById, 30L, TimeUnit.MINUTES);
+            // return botMapper.selectById(botId);
         } else if (userId < -1 && botId < -1) {// 如果 blueId < 0 且 botId < -1 说明是机器人
-            // 判断是否是机器，如果是机器会返回生成的一个机器人。
+            // 判断是否是机器，如果是机器会返回生成的一个机器人。机器人的话直接使用系统内部的代码，无需查询数据库。
             return MachinePlayerUtils.judgeIsMachinePlayer(botId);
         }
         return null;
@@ -248,9 +265,12 @@ public class WebSocketServer {
             // 説明是機器人
             return new User(userId, "机器人", "", machinePhoto, 1000, 0);
         }
-        String key = stringRedisTemplate.opsForValue().get(RedisKeyUtils.USER_KEY + userId);
-        String userStr = stringRedisTemplate.opsForValue().get(key);
-        return (userStr != null && !"".equals(userStr)) ? JSONUtil.toBean(userStr, User.class) : null;
+
+        String userName = stringRedisTemplate.opsForValue().get(RedisKeyUtils.USER_KEY + userId);
+        String key = RedisKeyUtils.USER_KEY + userName;
+        return cacheClient.queryHashWithPassThrough(key, new QueryWrapper<User>().eq("username", userName), User.class, userMapper::selectOne, 30L, TimeUnit.MINUTES);
+//        String userStr = stringRedisTemplate.opsForValue().get(key);
+//        return (userStr != null && !"".equals(userStr)) ? JSONUtil.toBean(userStr, User.class) : null;
         // return userMapper.selectById(userId);
     }
 }

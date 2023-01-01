@@ -70,7 +70,7 @@ public abstract class MatchingPool {
     public void execute() {
         while (true) {
             try {
-                Thread.sleep(1500);
+                Thread.sleep(1000);
                 lock.lock();
                 try {
                     increaseWaitingTime();
@@ -93,6 +93,7 @@ public abstract class MatchingPool {
         data.add("blue_botId", blue.getBotId().toString());
         data.add("red_id", red.getUserId().toString());
         data.add("red_botId", red.getBotId().toString());
+
         // 如果 id 为 -100， botId 为 -100 说明匹配的是机器人。
         try {
             restTemplate.postForObject(FIGHT_START_GAME_URL, data, String.class);

@@ -92,7 +92,7 @@ public class BalanceMatchingPool extends MatchingPool {
                 System.out.println("匹配到低分段人选");
                 sendResult(next, lower);
                 removePlayer(next);
-                removePlayer(higher);
+                removePlayer(lower);
                 i++;
             }
         }

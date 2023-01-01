@@ -10,7 +10,7 @@ public class GenerateMachinePlayer {
     private static Random random = new Random();
 
     public static Player generateMachinePlayer() {
-        int id = Math.abs(ThreadLocalRandom.current().nextInt(10000000));
+        int id = Math.abs(ThreadLocalRandom.current().nextInt(10000000)) + 100;
         Player machine = new Player(-id, -100, 0, -id);
         return machine;
     }

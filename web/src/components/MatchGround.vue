@@ -63,6 +63,7 @@ export default {
                 store.state.pk.socket.send(JSON.stringify({
                     event: "stop-matching",
                 }));
+                store.commit("end_timer");
             }
         }
 

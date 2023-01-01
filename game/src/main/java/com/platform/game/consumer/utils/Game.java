@@ -141,14 +141,7 @@ public class Game {
         data.add("userId", player.getId().toString());
         data.add("botCode", player.getBotCode());
         data.add("input", getInput(player)); // 获取玩家的下一步输入
-
         WebSocketServer.restTemplate.postForObject(addBotUrl, data, String.class);
-
-        try {
-            TimeUnit.MILLISECONDS.sleep(300);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
     private void sendAllMessage(String message) {

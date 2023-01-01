@@ -1,8 +1,11 @@
 package com.platform.fight.utils;
 
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.platform.fight.pojo.RedisData;
+import com.platform.fight.pojo.User;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,7 +13,9 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -131,6 +136,42 @@ public class CacheClient {
         }
         // 为避免长时间等待，直接返回旧数据
         return JSONUtil.toBean(redisData.getData().toString(), type);
+    }
+
+
+    public <R, Q> R queryHashWithPassThrough(String key, Q query, Class<R> elementType,
+                                             Function<Q, R> dbFallBack, Long time, TimeUnit unit) {
+
+        Map<Object, Object> data = stringRedisTemplate.opsForHash().entries(key);
+
+        // 用戶在 redis 中
+        if (data != null && data.size() != 0) {
+            stringRedisTemplate.expire(key, 30, TimeUnit.MINUTES);
+            return BeanUtil.mapToBean(data, elementType, true);
+        }
+        R r = dbFallBack.apply(query);
+
+        if (r == null) {
+            throw new RuntimeException("用户不存在");
+        }
+
+        setHash(key, r, elementType, time, unit);
+        return r;
+    }
+
+    public <E> void setHash(String key, Object value, Class<E> elementType, Long time, TimeUnit unit) {
+        Map<String, Object> map = BeanUtil.beanToMap(value, new HashMap<>(), CopyOptions
+                .create()
+                .setIgnoreNullValue(true)
+                .setFieldValueEditor((k, v) -> v.toString()));
+
+        // 用户移除敏感字段
+        if (elementType == User.class) {
+            System.out.println("是 user");
+            map.remove("password");
+        }
+        stringRedisTemplate.opsForHash().putAll(key, map);
+        stringRedisTemplate.expire(key, 30, TimeUnit.MINUTES);
     }
 
 }
